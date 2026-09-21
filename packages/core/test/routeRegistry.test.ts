@@ -60,6 +60,26 @@ describe("RouteRegistry", () => {
     expect(used).toEqual([]);
   });
 
+  it("throws on a route collision across two files, and mounts nothing", () => {
+    // Hand-built minimal stand-in for an Express Router's shape (a callable
+    // function with a `.stack` of { route: { path, methods } } entries) —
+    // avoids requiring "express" from a file written outside the monorepo's
+    // own node_modules resolution chain (a tmp dir), while still exercising
+    // the exact shape routeCollisions.ts inspects.
+    const fakeRouterModule = (path_: string, method: string) => `
+function router() {}
+router.stack = [{ route: { path: "${path_}", methods: { ${method}: true } } }];
+module.exports = router;`;
+
+    fs.writeFileSync(path.join(dir, "a.route.js"), fakeRouterModule("/register", "post"));
+    fs.writeFileSync(path.join(dir, "b.route.js"), fakeRouterModule("/register", "post"));
+
+    const { app, used } = fakeApp();
+    expect(() => new RouteRegistry(app, { featuresDir: dir }).load()).toThrow(/Route collision: "POST \/register"/);
+    // Fails before mounting anything — no partial, order-dependent state.
+    expect(used).toHaveLength(0);
+  });
+
   it("respects a custom suffix", () => {
     fs.writeFileSync(path.join(dir, "home.api.js"), `module.exports = function homeRouter() {};`);
     fs.writeFileSync(path.join(dir, "home.route.js"), `module.exports = function ignored() {};`);

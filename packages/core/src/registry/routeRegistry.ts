@@ -1,5 +1,6 @@
-import type { Application, RequestHandler } from "express";
+import type { Application, Router } from "express";
 import { findFiles } from "./scan";
+import { assertNoRouteCollisions, type RouteFileEntry } from "./routeCollisions";
 
 export interface RouteRegistryOptions {
   /** Directory to scan, e.g. path.join(process.cwd(), "features") */
@@ -26,10 +27,10 @@ export class RouteRegistry {
     const suffix = this.options.suffix ?? ".route.js";
     const files = findFiles(this.options.featuresDir, suffix);
 
-    for (const file of files) {
+    const entries: RouteFileEntry[] = files.map((file) => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const mod = require(file);
-      const router = (mod?.default ?? mod) as RequestHandler | undefined;
+      const router = (mod?.default ?? mod) as Router | undefined;
 
       if (typeof router !== "function") {
         throw new Error(
@@ -37,6 +38,12 @@ export class RouteRegistry {
         );
       }
 
+      return { file, router };
+    });
+
+    assertNoRouteCollisions(entries);
+
+    for (const { router } of entries) {
       this.app.use(router);
     }
 
