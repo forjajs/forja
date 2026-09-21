@@ -103,6 +103,12 @@ export default class NewCommand extends Command {
           message: "Which storage driver?",
           choices: ormDriverChoices(),
         },
+        {
+          type: "confirm",
+          name: "security",
+          message: "Add the security addon (@forjajs/addon-security) — helmet, CORS, sessions, rate limiting, CSRF? (Recommended)",
+          initial: true,
+        },
       ],
       {
         onCancel: () => {
@@ -149,6 +155,23 @@ export default class NewCommand extends Command {
       } catch (err) {
         if (err instanceof AddAddonError) {
           this.warn(`Could not add the ORM addon: ${err.message}`);
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (answers.security) {
+      try {
+        addAddon({
+          cwd: targetDir,
+          preset: "security",
+          log: (message) => this.log(message),
+          warn: (message) => this.warn(message),
+        });
+      } catch (err) {
+        if (err instanceof AddAddonError) {
+          this.warn(`Could not add the security addon: ${err.message}`);
         } else {
           throw err;
         }

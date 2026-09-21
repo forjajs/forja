@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { spawnSync } from "node:child_process";
 import { Command, Args } from "@oclif/core";
 import { requireOrmFeatureDir, resolveOrmDriver, resolveOrmDriverName, resolveForjaDrivers, ormConfigContent } from "../../ormDriver";
+import { writeEnvVars } from "../../envVars";
 
 interface JsonObject {
   [key: string]: unknown;
@@ -65,6 +66,22 @@ module.exports = require("./${newDriver.template}");
     if (currentDriver.kind !== newDriver.kind) {
       fs.writeFileSync(path.join(ormFeatureDir, "orm.config.js"), ormConfigContent(newDriver.kind));
       this.log(`Regenerated orm.config.js (storage kind changed: ${currentDriver.kind} -> ${newDriver.kind}).`);
+    }
+
+    // Network drivers each need their own env vars (DATABASE_URL's scheme
+    // differs — mysql:// vs postgres:// vs mongodb://) even when kind stays
+    // "network" across the switch (e.g. mysql -> postgres), so this runs
+    // regardless of the kind check above. Idempotent and additive — never
+    // overwrites an existing DATABASE_URL, since it could be a real,
+    // already-configured connection string (possibly prod credentials);
+    // silently rewriting it would be far worse than leaving it stale.
+    writeEnvVars({ cwd, label: newDriverName, vars: newDriver.env ?? [], log: (m) => this.log(m) });
+
+    if (currentDriver.kind === "network" && newDriver.kind === "network" && (newDriver.env?.length ?? 0) > 0) {
+      this.warn(
+        `DATABASE_URL (and TEST_DATABASE_URL) already existed for "${currentDriverName}" and was left untouched — ` +
+          `it almost certainly has the wrong scheme for "${newDriverName}" now. Update it by hand.`,
+      );
     }
 
     // package.json: drop the old driver's package, add the new one.

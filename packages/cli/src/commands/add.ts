@@ -9,7 +9,7 @@ export default class AddCommand extends Command {
   static args = {
     preset: Args.string({
       required: true,
-      description: `Addon to add (${OFFICIAL_PRESETS.join(", ")})`,
+      description: `Addon to add (${OFFICIAL_PRESETS.join(", ")}) — security is recommended for every project.`,
       options: OFFICIAL_PRESETS as unknown as string[],
     }),
   };

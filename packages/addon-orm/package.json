@@ -60,17 +60,29 @@
     "mysql": {
       "template": "orm.mysql-repository.js",
       "package": "mysql2",
-      "kind": "network"
+      "kind": "network",
+      "env": [
+        { "key": "DATABASE_URL", "default": "mysql://localhost:3306/myapp_dev" },
+        { "key": "TEST_DATABASE_URL", "default": "mysql://localhost:3306/myapp_test" }
+      ]
     },
     "postgres": {
       "template": "orm.postgres-repository.js",
       "package": "pg",
-      "kind": "network"
+      "kind": "network",
+      "env": [
+        { "key": "DATABASE_URL", "default": "postgres://localhost:5432/myapp_dev" },
+        { "key": "TEST_DATABASE_URL", "default": "postgres://localhost:5432/myapp_test" }
+      ]
     },
     "mongodb": {
       "template": "orm.mongodb-repository.js",
       "package": "mongodb",
-      "kind": "network"
+      "kind": "network",
+      "env": [
+        { "key": "DATABASE_URL", "default": "mongodb://localhost:27017/myapp_dev" },
+        { "key": "TEST_DATABASE_URL", "default": "mongodb://localhost:27017/myapp_test" }
+      ]
     }
   },
   "devDependencies": {

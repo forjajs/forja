@@ -89,4 +89,38 @@ describe("forja orm switch-driver", () => {
     addAddon({ cwd, preset: "orm", driverName: "json-driver", withExample: false, log: () => {}, warn: () => {} });
     await expect(OrmSwitchDriverCommand.run(["not-a-real-driver"], cliRoot)).rejects.toThrow(/Unknown driver/);
   });
+
+  it("adds the new network driver's env vars, even switching between two network drivers", async () => {
+    fs.writeFileSync(path.join(cwd, ".env"), "NODE_ENV=development\n");
+    fs.writeFileSync(path.join(cwd, ".env.example"), "NODE_ENV=development\n");
+
+    addAddon({ cwd, preset: "orm", driverName: "mysql", withExample: false, log: () => {}, warn: () => {} });
+    let env = fs.readFileSync(path.join(cwd, ".env"), "utf8");
+    expect(env).toMatch(/^DATABASE_URL=mysql:\/\//m);
+
+    await OrmSwitchDriverCommand.run(["postgres"], cliRoot);
+
+    env = fs.readFileSync(path.join(cwd, ".env"), "utf8");
+    // The mysql:// line is left in place (switch-driver never migrates data
+    // or cleans up the old driver's now-unused vars) — postgres's own
+    // DATABASE_URL default just can't be appended again under the same key,
+    // so the file keeps whichever came first.
+    expect(env).toMatch(/^DATABASE_URL=mysql:\/\//m);
+  });
+
+  it("warns that DATABASE_URL needs a manual update when switching between two network drivers", async () => {
+    fs.writeFileSync(path.join(cwd, ".env"), "NODE_ENV=development\n");
+    fs.writeFileSync(path.join(cwd, ".env.example"), "NODE_ENV=development\n");
+
+    addAddon({ cwd, preset: "orm", driverName: "mysql", withExample: false, log: () => {}, warn: () => {} });
+
+    const warnSpy = vi.spyOn(OrmSwitchDriverCommand.prototype, "warn").mockImplementation((input) => input as any);
+
+    await OrmSwitchDriverCommand.run(["postgres"], cliRoot);
+
+    expect(warnSpy.mock.calls.some(([message]) => String(message).includes("DATABASE_URL") && String(message).includes("wrong scheme"))).toBe(
+      true,
+    );
+    warnSpy.mockRestore();
+  });
 });

@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { ForjaEnvVar } from "./envVars";
 
 interface JsonObject {
   [key: string]: unknown;
@@ -11,6 +12,8 @@ export interface ForjaDriver {
   extension?: string;
   /** filesystem: stores in a local file/directory (json-driver, SQLite). network: connects to a server (MySQL, Postgres, MongoDB). */
   kind: "filesystem" | "network";
+  /** Network drivers only — env vars orm.config.js needs (DATABASE_URL...), auto-appended to .env/.env.example. */
+  env?: ForjaEnvVar[];
 }
 
 /** Reads the forjaDrivers map declared in @forjajs/orm's own package.json. */
@@ -110,15 +113,20 @@ module.exports = {
   return `/**
  * Per-environment connection config for @forjajs/orm. Selected via NODE_ENV
  * (defaults to "development"). Keeps dev/test/prod completely separate —
- * running tests (TI) can never corrupt dev or prod data. Point each at a
- * real connection string (env vars, never hardcoded credentials).
+ * running tests (TI) can never corrupt dev or prod data.
+ *
+ * No inline "|| defaultConnectionString" fallback here on purpose — DATABASE_URL
+ * and TEST_DATABASE_URL are guaranteed to already be in .env/.env.example (see
+ * this driver's "env" entry in @forjajs/orm's package.json, auto-written by
+ * \`forja add orm\`/\`forja orm switch-driver\`), a single source of truth
+ * instead of a default hidden in generated code.
  */
 module.exports = {
   development: {
-    connectionString: process.env.DATABASE_URL || "postgres://localhost:5432/myapp_dev",
+    connectionString: process.env.DATABASE_URL,
   },
   test: {
-    connectionString: process.env.TEST_DATABASE_URL || "postgres://localhost:5432/myapp_test",
+    connectionString: process.env.TEST_DATABASE_URL,
   },
   production: {
     connectionString: process.env.DATABASE_URL,
