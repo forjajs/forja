@@ -1,0 +1,35 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build (project-referenced packages)
+        run: npm run build
+
+      - name: Build addon-security (not part of the root project-reference graph)
+        run: npm run build -w @forjajs/addon-security
+
+      - name: Start database services for the ORM's network-driver tests
+        run: npm run test:services:up -w @forjajs/orm
+
+      - name: Test every package with a test script
+        run: npm run test --workspaces --if-present
+
+      - name: Stop database services
+        if: always()
+        run: npm run test:services:down -w @forjajs/orm
