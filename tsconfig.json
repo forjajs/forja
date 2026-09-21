@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "packages/contracts" },
     { "path": "packages/core" },
     { "path": "packages/addon-validator" },
     { "path": "packages/addon-auth" },

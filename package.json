@@ -15,5 +15,8 @@
   "devDependencies": {
     "@types/node": "^26.5.1",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true
   }
 }

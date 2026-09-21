@@ -3,6 +3,29 @@ import * as path from "node:path";
 import { Command, Args } from "@oclif/core";
 import prompts from "prompts";
 import { copyLayer, mergeFragment } from "../scaffold";
+import { addAddon, AddAddonError } from "../addAddon";
+
+interface JsonObject {
+  [key: string]: unknown;
+}
+
+interface ForjaDriver {
+  package: string;
+}
+
+function ormDriverChoices(): { title: string; value: string }[] {
+  try {
+    const ormPackageJsonPath = require.resolve("@forjajs/orm/package.json");
+    const ormPackageJson = JSON.parse(fs.readFileSync(ormPackageJsonPath, "utf8")) as JsonObject;
+    const forjaDrivers = (ormPackageJson.forjaDrivers as Record<string, ForjaDriver>) ?? {};
+    return Object.entries(forjaDrivers).map(([name, driver]) => ({
+      title: `${name} (${driver.package})`,
+      value: name,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 const TEMPLATES_DIR = path.join(__dirname, "..", "..", "templates");
 
@@ -68,6 +91,24 @@ export default class NewCommand extends Command {
             { title: "None", value: "none" },
           ],
         },
+        {
+          type: "confirm",
+          name: "orm",
+          message: "Add the ORM addon (@forjajs/orm)?",
+          initial: false,
+        },
+        {
+          type: (prev: boolean) => (prev ? "select" : null),
+          name: "ormDriver",
+          message: "Which storage driver?",
+          choices: ormDriverChoices(),
+        },
+        {
+          type: "confirm",
+          name: "security",
+          message: "Add the security addon (@forjajs/addon-security) — helmet, CORS, sessions, rate limiting, CSRF? (Recommended)",
+          initial: true,
+        },
       ],
       {
         onCancel: () => {
@@ -100,5 +141,41 @@ export default class NewCommand extends Command {
     this.log(`  render:   ${answers.render}`);
     this.log(`  css:      ${answers.css}`);
     this.log(`  tests:    ${answers.tests}`);
+
+    if (answers.orm) {
+      try {
+        addAddon({
+          cwd: targetDir,
+          preset: "orm",
+          driverName: answers.ormDriver,
+          withExample: true, // fresh scaffold, nothing to conflict with yet
+          log: (message) => this.log(message),
+          warn: (message) => this.warn(message),
+        });
+      } catch (err) {
+        if (err instanceof AddAddonError) {
+          this.warn(`Could not add the ORM addon: ${err.message}`);
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (answers.security) {
+      try {
+        addAddon({
+          cwd: targetDir,
+          preset: "security",
+          log: (message) => this.log(message),
+          warn: (message) => this.warn(message),
+        });
+      } catch (err) {
+        if (err instanceof AddAddonError) {
+          this.warn(`Could not add the security addon: ${err.message}`);
+        } else {
+          throw err;
+        }
+      }
+    }
   }
 }

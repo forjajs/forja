@@ -22,12 +22,16 @@
     "topics": {
       "make": {
         "description": "Generate a new engine (feature) in an existing Forja project."
+      },
+      "orm": {
+        "description": "Scaffold and manage @forjajs/orm models, migrations and seeds."
       }
     }
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "@oclif/core": "^4",
@@ -41,7 +45,8 @@
   },
   "devDependencies": {
     "@types/node": "*",
-    "@types/prompts": "^2"
+    "@types/prompts": "^2",
+    "vitest": "^2"
   },
   "engines": {
     "node": ">=18"

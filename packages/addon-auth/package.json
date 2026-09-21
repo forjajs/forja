@@ -15,6 +15,7 @@
   },
   "peerDependencies": {
     "@forjajs/core": "*",
-    "@forjajs/addon-validator": "*"
+    "@forjajs/addon-validator": "*",
+    "bcrypt": "^5"
   }
 }

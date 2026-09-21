@@ -2,7 +2,7 @@
 
 A real, page-based B+tree JSON document storage engine — written from scratch in
 TypeScript, with zero dependencies. Usable on its own in any Node.js project, no
-[Forja](https://github.com/AlyNotMe/forja) required.
+[Forja](https://github.com/forjajs/forja) required.
 
 Not a "load the whole file into memory" JSON store. It's a genuine storage engine:
 a `Pager` doing page-granular disk I/O (4096-byte pages, like SQLite), slotted
@@ -83,7 +83,7 @@ within one process, reads included.
 
 ## How it's built
 
-See [`PLAN-json-engine.md`](https://github.com/AlyNotMe/forja/blob/main/PLAN-json-engine.md)
+See [`PLAN-json-engine.md`](https://github.com/forjajs/forja/blob/main/PLAN-json-engine.md)
 in the main Forja repo for the full design: on-disk page format, B+tree cell
 layout, the free-list, overflow chains, and the milestone-by-milestone build log.
 

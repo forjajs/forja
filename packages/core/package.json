@@ -1,18 +1,48 @@
 {
   "name": "@forjajs/core",
-  "version": "0.0.0",
-  "description": "Forja core: registry-driven, feature-based Express foundation.",
+  "version": "0.1.0",
+  "description": "Forja core: registry-driven, feature-based Express foundation — auto-discovers routes and global middlewares, no central list to keep in sync.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "express",
+    "framework",
+    "routing",
+    "middleware",
+    "auto-discovery",
+    "dependency-inversion",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forjajs/forja.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/forjajs/forja/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/forjajs/forja/issues"
+  },
+  "author": "KMS",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run"
   },
   "dependencies": {
-    "express": "^4"
+    "express": "^4",
+    "@forjajs/contracts": "*"
   },
   "devDependencies": {
-    "@types/express": "^4"
+    "@types/express": "^4",
+    "@types/node": "*",
+    "vitest": "^2"
   }
 }

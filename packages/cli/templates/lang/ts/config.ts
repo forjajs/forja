@@ -8,4 +8,5 @@ export default createConfig({
   name: { env: "APP_NAME", default: "forja-app" },
   host: { env: "HOST", default: "localhost" },
   port: { env: "PORT", default: 3000, parse: Number },
+  defaultLang: { env: "DEFAULT_LANG", default: "en" },
 });

@@ -1,15 +1,98 @@
 {
   "name": "@forjajs/orm",
-  "version": "0.0.0",
-  "description": "Forja in-house multi-DB ORM (JSON, SQL, MySQL...).",
+  "version": "0.1.0",
+  "description": "Multi-driver ORM (json-driver, SQLite, MySQL, PostgreSQL, MongoDB) — schema validation, migrations, transactions, query builder, relations. Usable standalone, no Forja required.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
+  "keywords": [
+    "orm",
+    "database",
+    "sqlite",
+    "mysql",
+    "postgres",
+    "postgresql",
+    "mongodb",
+    "migrations",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forjajs/forja.git",
+    "directory": "packages/addon-orm"
+  },
+  "homepage": "https://github.com/forjajs/forja/tree/main/packages/addon-orm#readme",
+  "bugs": {
+    "url": "https://github.com/forjajs/forja/issues"
+  },
+  "author": "KMS",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:services:up": "docker compose -f docker-compose.test.yml up -d --wait && docker compose -f docker-compose.test.yml exec -T orm-test-mongodb mongosh --quiet --eval \"try { rs.status() } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '127.0.0.1:27017' }] }) }\"",
+    "test:services:down": "docker compose -f docker-compose.test.yml down -v"
   },
   "peerDependencies": {
-    "@forjajs/core": "*"
+    "@forjajs/contracts": "*"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "forjaDrivers": {
+    "json-driver": {
+      "template": "orm.@forjajs-json-driver-repository.js",
+      "package": "@forjajs/json-driver",
+      "extension": ".json-driver",
+      "kind": "filesystem"
+    },
+    "sqlite": {
+      "template": "orm.sqlite-repository.js",
+      "package": "better-sqlite3",
+      "extension": ".sqlite3",
+      "kind": "filesystem"
+    },
+    "mysql": {
+      "template": "orm.mysql-repository.js",
+      "package": "mysql2",
+      "kind": "network",
+      "env": [
+        { "key": "DATABASE_URL", "default": "mysql://localhost:3306/myapp_dev" },
+        { "key": "TEST_DATABASE_URL", "default": "mysql://localhost:3306/myapp_test" }
+      ]
+    },
+    "postgres": {
+      "template": "orm.postgres-repository.js",
+      "package": "pg",
+      "kind": "network",
+      "env": [
+        { "key": "DATABASE_URL", "default": "postgres://localhost:5432/myapp_dev" },
+        { "key": "TEST_DATABASE_URL", "default": "postgres://localhost:5432/myapp_test" }
+      ]
+    },
+    "mongodb": {
+      "template": "orm.mongodb-repository.js",
+      "package": "mongodb",
+      "kind": "network",
+      "env": [
+        { "key": "DATABASE_URL", "default": "mongodb://localhost:27017/myapp_dev" },
+        { "key": "TEST_DATABASE_URL", "default": "mongodb://localhost:27017/myapp_test" }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "vitest": "^2",
+    "better-sqlite3": "^11",
+    "mysql2": "^3",
+    "pg": "^8",
+    "mongodb": "^6",
+    "@types/better-sqlite3": "^7",
+    "@types/pg": "^8"
   }
 }

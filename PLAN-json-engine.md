@@ -180,6 +180,51 @@ in-memory partial-match predicate. Each "collection" = one engine file (e.g.
 - `tsc -b` at the repo root after milestones 1 and 10, to confirm the new package's project-reference wiring and `@forjajs/orm`'s updated `src/index.ts` both compile cleanly across the whole graph.
 - End-to-end smoke check after milestone 10: a small script that `createJsonRepository`s a temp file, `create`s a few records, `findById`/`findOne`s them back, `update`s and `delete`s one, then reopens the same file path in a fresh process and confirms the surviving records read back correctly.
 
+## Milestone 12+ — `forja orm` CLI: model, migration, seed, multi-env
+
+Revision after milestone 10/11 design review: a repository (`Repository<T>`) alone is not
+an ORM — an ORM maps objects to a **declared schema**. Without a schema there's nothing to
+map, just a generic CRUD wrapper (which is what `createRepositoryFromStore` already is).
+This milestone adds the schema layer and the CLI surface on top of it, plus the classic
+three-environment split (dev/test/prod) so tests never touch dev or prod data.
+
+Architecture:
+
+- **`orm.config.js`** (generated at `features/orm/orm.config.js` by `forja add orm`) —
+  maps `development` / `test` / `production` to a driver + storage path. Selected via
+  `process.env.NODE_ENV` (defaults to `development`). Each env gets its own data files —
+  `data/dev/`, `data/test/`, `data/prod/` — never shared, so running tests (TI) can never
+  corrupt dev or prod data.
+- **Model** (`defineModel`, new export in `@forjajs/orm/src/`) — wraps an `OrmRepository<T>`
+  (from `createRepositoryFromStore` or any driver's own `Repository<T>`) with a declared
+  field schema (`{ field: { type, required } }`), validated on `create`/`update` before the
+  underlying driver ever sees the write. This is what actually earns the name "ORM."
+  `forja orm new <Name>` scaffolds `features/orm/models/<name>.model.js` wiring this up for
+  the project's chosen driver + current env.
+- **Migration** — even though `json-driver` is schemaless (no `ALTER TABLE`), a migration
+  here is a versioned transform script (`up(repository)` / `down(repository)`) applied to
+  already-written documents (e.g. backfilling a new field's default, renaming a field).
+  Applied migrations are tracked in a driver-native file (`data/<env>/_migrations.json-driver`)
+  so `forja orm migrate` only runs what's pending. `forja orm make:migration <name>` scaffolds
+  a new migration file.
+- **Seed** — `features/orm/seeds/<name>.seed.js` (`async function seed() { await Model.create(...) }`).
+  `forja orm make:seed <name>` scaffolds one, `forja orm seed` runs all seeds for the current env.
+- **CLI surface** — new commands under `packages/cli/src/commands/orm/`: `new.ts`,
+  `migrate.ts`, `seed.ts`, `make/migration.ts`, `make/seed.ts`. Each reads `orm.config.js`
+  from the consumer project to resolve the active environment, mirroring how `add.ts`
+  already resolves `forjaDrivers` from the addon's own `package.json`.
+
+Build order:
+
+12. **`defineModel` + schema validation** in `@forjajs/orm/src/` — unit-tested with Vitest
+    alongside `createRepositoryFromStore`/`HyperLogLog`.
+13. **`orm.config.js` template + env resolution** — `forja add orm` generates it; driver
+    templates read the active env's path instead of a hardcoded file path.
+14. **`forja orm new <Name>`** — scaffolds a model file for the addon's active driver.
+15. **`forja orm make:migration` / `forja orm migrate`** — migration file scaffold + runner
+    with a tracked-applied-migrations file.
+16. **`forja orm make:seed` / `forja orm seed`** — seed file scaffold + runner.
+
 ## Critical files
 
 - `packages/core/src/contracts/repository.ts` — the contract the adapter must satisfy exactly.

@@ -21,12 +21,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AlyNotMe/forja.git",
+    "url": "git+https://github.com/forjajs/forja.git",
     "directory": "packages/addon-json-driver"
   },
-  "homepage": "https://github.com/AlyNotMe/forja/tree/main/packages/addon-json-driver#readme",
+  "homepage": "https://github.com/forjajs/forja/tree/main/packages/addon-json-driver#readme",
   "bugs": {
-    "url": "https://github.com/AlyNotMe/forja/issues"
+    "url": "https://github.com/forjajs/forja/issues"
   },
   "author": "KMS",
   "publishConfig": {

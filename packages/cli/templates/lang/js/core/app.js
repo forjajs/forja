@@ -3,6 +3,7 @@ const path = require("node:path");
 const express = require("express");
 const { RouteRegistry, MiddlewareRegistry } = require("@forjajs/core");
 const config = require("../config");
+const { notFoundHandler, errorHandler } = require("./errorHandler");
 
 // Always resolved from the project root (where the app is started), never from
 // __dirname — for a TS project __dirname points into dist/ once compiled, but
@@ -12,6 +13,7 @@ const projectRoot = process.cwd();
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(projectRoot, "public")));
 
 // Exposed via `req.app.get("config")` instead of a plain `require("../config")`
@@ -49,5 +51,11 @@ const routeRegistry = new RouteRegistry(app, {
   featuresDir: path.join(projectRoot, "features"),
 });
 routeRegistry.load();
+
+// Must come after every registry .load() — Express matches middlewares in
+// registration order, so mounting these any earlier would catch requests
+// that a real route further down would otherwise have handled.
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 module.exports = app;

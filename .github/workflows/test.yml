@@ -1,0 +1,51 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build (project-referenced packages)
+        run: npm run build
+
+      - name: Build addon-security (not part of the root project-reference graph)
+        run: npm run build -w @forjajs/addon-security
+
+      - name: Start database services for the ORM's network-driver tests
+        run: npm run test:services:up -w @forjajs/orm
+
+      # mysql:8, on a fresh (empty) data dir, boots a temporary server to run
+      # its init scripts, shuts it down, then starts the real one — the
+      # temporary server also answers `mysqladmin ping`, so the healthcheck
+      # `test:services:up` waits on can report "healthy" during that window
+      # and let us through right as the real server is still coming up,
+      # dropping the very first connection ("Connection lost: The server
+      # closed the connection."). "ready for connections" is logged once per
+      # server, so waiting for it twice means the real one is actually up.
+      - name: Wait for mysql's real server (past its init-time restart)
+        run: |
+          timeout 60 bash -c '
+            until [ "$(docker compose -f packages/addon-orm/docker-compose.test.yml logs orm-test-mysql 2>/dev/null | grep -c "ready for connections")" -ge 2 ]; do
+              sleep 1
+            done
+          '
+
+      - name: Test every package with a test script
+        run: npm run test --workspaces --if-present
+
+      - name: Stop database services
+        if: always()
+        run: npm run test:services:down -w @forjajs/orm

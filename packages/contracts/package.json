@@ -1,0 +1,42 @@
+{
+  "name": "@forjajs/contracts",
+  "version": "0.1.0",
+  "description": "Zero-dependency DIP contracts (Repository, Hasher, ViewEngine, Addon) and the assertImplements() runtime guard, shared by every Forja addon — HTTP-based or not.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "interfaces",
+    "contracts",
+    "dependency-inversion",
+    "dip",
+    "typescript",
+    "utility"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forjajs/forja.git",
+    "directory": "packages/contracts"
+  },
+  "homepage": "https://github.com/forjajs/forja/tree/main/packages/contracts#readme",
+  "bugs": {
+    "url": "https://github.com/forjajs/forja/issues"
+  },
+  "author": "KMS",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "vitest": "^2"
+  }
+}

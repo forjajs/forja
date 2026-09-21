@@ -15,7 +15,7 @@ const translations = {
 // "/" auto-detects via Accept-Language; "/fr" and "/en" force a language
 // explicitly, same URL convention as NeoChess-Legacy's `/:language?/login`.
 router.get(["/", "/:lang(en|fr)"], (req, res) => {
-  const lang = req.params.lang || req.acceptsLanguages("fr", "en") || "en";
+  const lang = req.params.lang || req.acceptsLanguages("fr", "en") || req.app.get("config").defaultLang;
   res.render("home", { appName: req.app.get("config").name, lang, t: translations[lang] });
 });
 
