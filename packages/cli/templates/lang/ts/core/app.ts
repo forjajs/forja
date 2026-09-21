@@ -3,6 +3,7 @@ import * as path from "node:path";
 import express from "express";
 import { RouteRegistry, MiddlewareRegistry } from "@forjajs/core";
 import config from "../config";
+import { notFoundHandler, errorHandler } from "./errorHandler";
 
 // Always resolved from the project root (where the app is started), never from
 // __dirname — once compiled, __dirname points into dist/, but features/,
@@ -51,5 +52,11 @@ const routeRegistry = new RouteRegistry(app, {
   featuresDir: path.join(projectRoot, "features"),
 });
 routeRegistry.load();
+
+// Must come after every registry .load() — Express matches middlewares in
+// registration order, so mounting these any earlier would catch requests
+// that a real route further down would otherwise have handled.
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
