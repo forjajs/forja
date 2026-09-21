@@ -11,13 +11,13 @@ function loadWithEnv(dir: string, env: Record<string, string | undefined>) {
 
   vi.resetModules();
   try {
-    return require(path.join(dir, "shared", "middlewares", "06-session.middleware.js"));
+    return require(path.join(dir, "shared", "middlewares", "08-session.middleware.js"));
   } finally {
     process.env = original;
   }
 }
 
-describe("06-session.middleware", () => {
+describe("08-session.middleware", () => {
   let layout: ReturnType<typeof makeDeployedSecurityLayout>;
 
   afterEach(() => {

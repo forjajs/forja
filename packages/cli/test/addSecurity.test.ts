@@ -37,19 +37,21 @@ describe("addAddon (security preset)", () => {
 
     const middlewaresDir = path.join(cwd, "shared", "middlewares");
     for (const file of [
-      "00-cookie-parser.middleware.js",
-      "01-headers.middleware.js",
-      "02-cors.middleware.js",
-      "03-compression.middleware.js",
-      "04-hpp.middleware.js",
-      "05-rate-limit.middleware.js",
-      "06-session.middleware.js",
-      "07-csrf.middleware.js",
+      "00-trust-proxy.middleware.js",
+      "01-cookie-parser.middleware.js",
+      "02-headers.middleware.js",
+      "03-cors.middleware.js",
+      "04-compression.middleware.js",
+      "05-hpp.middleware.js",
+      "06-sanitize.middleware.js",
+      "07-rate-limit.middleware.js",
+      "08-session.middleware.js",
+      "09-csrf.middleware.js",
     ]) {
       expect(fs.existsSync(path.join(middlewaresDir, file))).toBe(true);
     }
 
-    expect(fs.existsSync(path.join(cwd, "features", "security", "00-cookie-parser.middleware.js"))).toBe(false);
+    expect(fs.existsSync(path.join(cwd, "features", "security", "00-trust-proxy.middleware.js"))).toBe(false);
   });
 
   it("copies explicit-use helpers (rate limiter factory) into features/security/", () => {
@@ -64,14 +66,14 @@ describe("addAddon (security preset)", () => {
     addAddon({ cwd, preset: "security", log: () => {}, warn: () => {} });
 
     const pkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8"));
-    for (const dep of ["@forjajs/addon-security", "helmet", "cors", "compression", "hpp", "express-rate-limit", "express-session", "cookie-parser"]) {
+    for (const dep of ["@forjajs/addon-security", "helmet", "cors", "compression", "hpp", "express-mongo-sanitize", "express-rate-limit", "express-session", "cookie-parser"]) {
       expect(pkg.dependencies[dep]).toBeDefined();
     }
   });
 
   it("refuses to overwrite an existing shared/middlewares file", () => {
     fs.mkdirSync(path.join(cwd, "shared", "middlewares"), { recursive: true });
-    fs.writeFileSync(path.join(cwd, "shared", "middlewares", "01-headers.middleware.js"), "// custom, mine");
+    fs.writeFileSync(path.join(cwd, "shared", "middlewares", "02-headers.middleware.js"), "// custom, mine");
 
     expect(() => addAddon({ cwd, preset: "security", log: () => {}, warn: () => {} })).toThrow(AddAddonError);
   });

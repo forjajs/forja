@@ -1,8 +1,9 @@
 # @forjajs/addon-security
 
-Forja's official security hardening addon: cookie parsing, hardened HTTP
-headers, CORS, compression, HTTP Parameter Pollution protection, rate
-limiting, sessions, and CSRF protection. Usable standalone in any Express app
+Forja's official security hardening addon: trust-proxy handling, cookie
+parsing, hardened HTTP headers, CORS, compression, HTTP Parameter Pollution
+protection, NoSQL-injection sanitization, rate limiting, sessions, and CSRF
+protection. Usable standalone in any Express app
 — [Forja](https://github.com/forjajs/forja) is not required, but `forja add
 security` wires it in automatically and mounts every middleware in the right
 order for you.
@@ -15,25 +16,29 @@ Express app needs regardless of whether it has a login system at all.
 
 | File | What it does |
 | --- | --- |
-| `00-cookie-parser.middleware.js` | Parses the `Cookie` header — session and CSRF both read `req.cookies`. |
-| `01-headers.middleware.js` | `helmet`, with a CSP starting from its safe defaults plus `form-action: 'self'`. HSTS only enables once `NODE_ENV=production` (meaningless over plain HTTP in dev). |
-| `02-cors.middleware.js` | `cors`, driven by a `CORS_ORIGIN` allowlist — **required** in production, refuses to fall back to `origin: "*"`. |
-| `03-compression.middleware.js` | `compression`, no config needed. |
-| `04-hpp.middleware.js` | `hpp` — guards against `?role=user&role=admin`-style parameter pollution. |
-| `05-rate-limit.middleware.js` | A generous global baseline (`express-rate-limit`) against volume-based abuse. |
-| `06-session.middleware.js` | `express-session` with secure cookie defaults (`httpOnly`, `sameSite: "lax"`, `secure` in production). Requires `SESSION_SECRET`. |
-| `07-csrf.middleware.js` | Hand-rolled double-submit-cookie CSRF check — no `csurf` (deprecated/unmaintained). Only enforced when `req.session` exists and the method isn't safe (`GET`/`HEAD`/`OPTIONS`). |
+| `00-trust-proxy.middleware.js` | Sets Express's `trust proxy` from `TRUST_PROXY` — unset by default (no proxy assumed). Needed for `req.ip`, `secure`, and `X-Forwarded-*` to be trustworthy behind a reverse proxy/load balancer. |
+| `01-cookie-parser.middleware.js` | Parses the `Cookie` header — session and CSRF both read `req.cookies`. |
+| `02-headers.middleware.js` | `helmet`, with a CSP starting from its safe defaults plus `form-action: 'self'`. HSTS only enables once `NODE_ENV=production` (meaningless over plain HTTP in dev). |
+| `03-cors.middleware.js` | `cors`, driven by a `CORS_ORIGIN` allowlist — **required** in production, refuses to fall back to `origin: "*"`. |
+| `04-compression.middleware.js` | `compression`, no config needed. |
+| `05-hpp.middleware.js` | `hpp` — guards against `?role=user&role=admin`-style parameter pollution. |
+| `06-sanitize.middleware.js` | `express-mongo-sanitize` — strips `$`/`.`-keyed NoSQL operator injection (`{"email":{"$gt":""}}`) from `req.body`/`query`/`params`. |
+| `07-rate-limit.middleware.js` | A generous global baseline (`express-rate-limit`) against volume-based abuse. |
+| `08-session.middleware.js` | `express-session` with secure cookie defaults (`httpOnly`, `sameSite: "lax"`, `secure` in production). Requires `SESSION_SECRET`. |
+| `09-csrf.middleware.js` | Hand-rolled double-submit-cookie CSRF check — no `csurf` (deprecated/unmaintained). Only enforced when `req.session` exists and the method isn't safe (`GET`/`HEAD`/`OPTIONS`). |
 | `security.rateLimiters.js` | `createRateLimiter(options)` — a **stricter**, route-scoped limiter factory for login/register/password-reset, not auto-mounted. |
 
-The eight `NN-*.middleware.js` files are global — meant to run on every
-request — and the numeric prefixes fix their load order (cookies before
-session, session before CSRF, etc.). `security.rateLimiters.js` is the one
-piece you require explicitly, only where you actually need a tighter limit.
+The ten `NN-*.middleware.js` files are global — meant to run on every
+request — and the numeric prefixes fix their load order (trust proxy before
+rate-limit/session, cookies before session, session before CSRF, etc.).
+`security.rateLimiters.js` is the one piece you require explicitly, only
+where you actually need a tighter limit.
 
 ## Environment variables
 
 | Variable | Required | Default |
 | --- | --- | --- |
+| `TRUST_PROXY` | no | unset — no proxy assumed. `"1"` for a single reverse proxy, or any Express `trust proxy` value (subnet, `"loopback"`...) |
 | `CORS_ORIGIN` | in production | none — CORS is disabled entirely in dev if unset |
 | `SESSION_SECRET` | always | none — throws at boot if missing |
 | `SESSION_NAME` | no | `forja.sid` |
@@ -52,7 +57,7 @@ CSRF).
 
 ```bash
 npm install @forjajs/addon-security helmet cors compression hpp \
-  express-rate-limit express-session cookie-parser
+  express-mongo-sanitize express-rate-limit express-session cookie-parser
 ```
 
 ```js
@@ -62,14 +67,16 @@ const app = express();
 // Copy these files from node_modules/@forjajs/addon-security/templates/
 // into your own project (e.g. shared/middlewares/) and require them from
 // there — they're plain, editable Express middlewares, not a library API.
-app.use(require("./shared/middlewares/00-cookie-parser.middleware.js"));
-app.use(require("./shared/middlewares/01-headers.middleware.js"));
-app.use(require("./shared/middlewares/02-cors.middleware.js"));
-app.use(require("./shared/middlewares/03-compression.middleware.js"));
-app.use(require("./shared/middlewares/04-hpp.middleware.js"));
-app.use(require("./shared/middlewares/05-rate-limit.middleware.js"));
-app.use(require("./shared/middlewares/06-session.middleware.js"));
-app.use(require("./shared/middlewares/07-csrf.middleware.js"));
+app.use(require("./shared/middlewares/00-trust-proxy.middleware.js"));
+app.use(require("./shared/middlewares/01-cookie-parser.middleware.js"));
+app.use(require("./shared/middlewares/02-headers.middleware.js"));
+app.use(require("./shared/middlewares/03-cors.middleware.js"));
+app.use(require("./shared/middlewares/04-compression.middleware.js"));
+app.use(require("./shared/middlewares/05-hpp.middleware.js"));
+app.use(require("./shared/middlewares/06-sanitize.middleware.js"));
+app.use(require("./shared/middlewares/07-rate-limit.middleware.js"));
+app.use(require("./shared/middlewares/08-session.middleware.js"));
+app.use(require("./shared/middlewares/09-csrf.middleware.js"));
 
 const { createRateLimiter } = require("./features/security/security.rateLimiters.js");
 
@@ -91,7 +98,7 @@ template source plus the npm dependency wiring.
 forja add security
 ```
 
-Copies the eight global middlewares into `shared/middlewares/` — picked up
+Copies the ten global middlewares into `shared/middlewares/` — picked up
 automatically by `@forjajs/core`'s `MiddlewareRegistry` in load order, nothing
 to wire by hand — and `security.rateLimiters.js` into `features/security/`.
 Adds every dependency listed above to `package.json` and installs exactly
@@ -130,7 +137,7 @@ router.post("/login", async (req, res) => {
 const { createRateLimiter } = require("../security/security.rateLimiters");
 
 router.post("/login", createRateLimiter({ max: 10 }), async (req, res) => {
-  // the global 05-rate-limit.middleware.js baseline (300 req/15min) is too
+  // the global 07-rate-limit.middleware.js baseline (300 req/15min) is too
   // loose to stop credential stuffing — this route gets its own, tighter cap
 });
 ```

@@ -1,7 +1,7 @@
 {
   "name": "@forjajs/addon-security",
   "version": "0.0.0",
-  "description": "Forja official security addon: hardened headers, CORS, compression, sessions, rate limiting, CSRF, and HPP protection.",
+  "description": "Forja official security addon: hardened headers, CORS, compression, sessions, rate limiting, CSRF, HPP, NoSQL-injection sanitization, and trust-proxy handling.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
@@ -16,38 +16,65 @@
     "test": "vitest run"
   },
   "forjaEnv": [
-    { "key": "CORS_ORIGIN", "default": "", "comment": "Comma-separated allowlist — required in production" },
-    { "key": "SESSION_SECRET", "secret": true, "comment": "Session cookie signing secret" },
-    { "key": "SESSION_NAME", "default": "forja.sid" },
-    { "key": "SESSION_MAX_AGE_MS", "default": "3600000" },
-    { "key": "RATE_LIMIT_WINDOW_MS", "default": "900000" },
-    { "key": "RATE_LIMIT_MAX", "default": "300" }
+    {
+      "key": "TRUST_PROXY",
+      "default": "",
+      "comment": "Unset = no proxy assumed. \"1\" for a single reverse proxy, or an Express trust-proxy value (subnet, \"loopback\"...)"
+    },
+    {
+      "key": "CORS_ORIGIN",
+      "default": "",
+      "comment": "Comma-separated allowlist — required in production"
+    },
+    {
+      "key": "SESSION_SECRET",
+      "secret": true,
+      "comment": "Session cookie signing secret"
+    },
+    {
+      "key": "SESSION_NAME",
+      "default": "forja.sid"
+    },
+    {
+      "key": "SESSION_MAX_AGE_MS",
+      "default": "3600000"
+    },
+    {
+      "key": "RATE_LIMIT_WINDOW_MS",
+      "default": "900000"
+    },
+    {
+      "key": "RATE_LIMIT_MAX",
+      "default": "300"
+    }
   ],
   "peerDependencies": {
     "@forjajs/core": "*",
-    "helmet": "^8",
-    "cors": "^2",
     "compression": "^1",
-    "hpp": "^0.2",
+    "cookie-parser": "^1",
+    "cors": "^2",
+    "express-mongo-sanitize": "^2",
     "express-rate-limit": "^7",
     "express-session": "^1",
-    "cookie-parser": "^1"
+    "helmet": "^8",
+    "hpp": "^0.2"
   },
   "devDependencies": {
-    "@types/node": "*",
-    "@types/express": "^4",
-    "@types/cors": "^2",
     "@types/compression": "^1",
-    "@types/hpp": "^0.2",
-    "@types/express-session": "^1",
     "@types/cookie-parser": "^1",
-    "vitest": "^2",
-    "helmet": "^8",
-    "cors": "^2",
+    "@types/cors": "^2",
+    "@types/express": "^4",
+    "@types/express-session": "^1",
+    "@types/hpp": "^0.2",
+    "@types/node": "*",
     "compression": "^1",
-    "hpp": "^0.2",
+    "cookie-parser": "^1",
+    "cors": "^2",
+    "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7",
     "express-session": "^1",
-    "cookie-parser": "^1"
+    "helmet": "^8",
+    "hpp": "^0.2",
+    "vitest": "^2"
   }
 }

@@ -10,6 +10,18 @@ const { createConfig } = require("@forjajs/core");
 // and features/ are never compiled, so this is require()'d by relative path
 // directly, not routed through req.app.get("config").
 module.exports = createConfig({
+  trustProxy: {
+    env: "TRUST_PROXY",
+    default: undefined,
+    // "1" / "2"... -> number of hops; "true"/"false" -> boolean; anything
+    // else (a subnet, an IP, "loopback"...) is passed through to Express as-is.
+    parse: (raw) => {
+      if (/^\d+$/.test(raw)) return Number(raw);
+      if (raw === "true") return true;
+      if (raw === "false") return false;
+      return raw;
+    },
+  },
   corsOrigin: {
     env: "CORS_ORIGIN",
     required: process.env.NODE_ENV === "production",

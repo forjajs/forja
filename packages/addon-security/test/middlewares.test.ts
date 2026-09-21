@@ -6,13 +6,13 @@ import { describe, it, expect } from "vitest";
 // function" — the actual behavior (headers set, gzip applied...) is that
 // dependency's own responsibility, already covered by its own test suite.
 //
-// 02-cors, 05-rate-limit and 06-session are excluded here — they require
-// security.config.js via a relative path built for the deployed project
-// layout (shared/middlewares/ + features/security/ as siblings), which only
-// exists once copied by `forja add security` — see cors.test.ts,
-// rateLimit.test.ts and session.test.ts, which build that layout in a tmp dir
-// first.
-describe.each([["00-cookie-parser.middleware.js"], ["01-headers.middleware.js"], ["03-compression.middleware.js"], ["04-hpp.middleware.js"]])(
+// 00-trust-proxy, 03-cors, 07-rate-limit and 08-session are excluded here —
+// they require security.config.js via a relative path built for the deployed
+// project layout (shared/middlewares/ + features/security/ as siblings),
+// which only exists once copied by `forja add security` — see
+// trustProxy.test.ts, cors.test.ts, rateLimit.middleware.test.ts and
+// session.test.ts, which build that layout in a tmp dir first.
+describe.each([["01-cookie-parser.middleware.js"], ["02-headers.middleware.js"], ["04-compression.middleware.js"], ["05-hpp.middleware.js"], ["06-sanitize.middleware.js"]])(
   "%s",
   (file) => {
     it("loads and exports an Express middleware function", () => {

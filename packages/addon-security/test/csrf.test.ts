@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const csrfProtection = require("../templates/middlewares/07-csrf.middleware.js");
+const csrfProtection = require("../templates/middlewares/09-csrf.middleware.js");
 
 interface FakeReq {
   session: Record<string, unknown> | null;
@@ -54,7 +54,7 @@ function fakeRes() {
   return res;
 }
 
-describe("07-csrf.middleware", () => {
+describe("09-csrf.middleware", () => {
   it("skips enforcement when there is no session (pure token/JWT API)", () => {
     const req = fakeReq({ session: null, method: "POST" });
     const res = fakeRes();

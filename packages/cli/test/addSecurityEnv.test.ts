@@ -40,7 +40,7 @@ describe("addAddon (security preset) — forjaEnv", () => {
     const env = fs.readFileSync(path.join(cwd, ".env"), "utf8");
     const envExample = fs.readFileSync(path.join(cwd, ".env.example"), "utf8");
 
-    for (const key of ["CORS_ORIGIN", "SESSION_SECRET", "SESSION_NAME", "SESSION_MAX_AGE_MS", "RATE_LIMIT_WINDOW_MS", "RATE_LIMIT_MAX"]) {
+    for (const key of ["TRUST_PROXY", "CORS_ORIGIN", "SESSION_SECRET", "SESSION_NAME", "SESSION_MAX_AGE_MS", "RATE_LIMIT_WINDOW_MS", "RATE_LIMIT_MAX"]) {
       expect(env).toMatch(new RegExp(`^${key}=`, "m"));
       expect(envExample).toMatch(new RegExp(`^${key}=`, "m"));
     }

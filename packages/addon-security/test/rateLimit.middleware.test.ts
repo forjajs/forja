@@ -8,13 +8,13 @@ function loadWithEnv(dir: string, env: Record<string, string | undefined>) {
 
   vi.resetModules();
   try {
-    return require(path.join(dir, "shared", "middlewares", "05-rate-limit.middleware.js"));
+    return require(path.join(dir, "shared", "middlewares", "07-rate-limit.middleware.js"));
   } finally {
     process.env = original;
   }
 }
 
-describe("05-rate-limit.middleware", () => {
+describe("07-rate-limit.middleware", () => {
   let layout: ReturnType<typeof makeDeployedSecurityLayout>;
 
   afterEach(() => {
